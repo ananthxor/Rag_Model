@@ -116,6 +116,11 @@ class VectorStore:
         # Step 1: Semantic Vector Search
         query_embedding = self.llm_service.get_embedding(query, trace_id=trace_id)
         
+        # Trace Query Vector
+        from src.utils.logger import print_trace
+        embed_preview = str(query_embedding[:5])[:-1] + ", ...]" 
+        print_trace("QUERY EMBEDDING GENERATED", f"Vector Snippet: {embed_preview}\nDimensions: {len(query_embedding)}")
+
         results = self.collection.query(
             query_embeddings=[query_embedding],
             n_results=k
@@ -124,8 +129,6 @@ class VectorStore:
         search_results = []
         retrieved_ids = set()
         
-        from src.utils.logger import print_trace
-
         if results['documents']:
             for i, doc in enumerate(results['documents'][0]):
                 doc_id = results['ids'][0][i] if results.get('ids') else f"doc_{i}"
@@ -135,9 +138,15 @@ class VectorStore:
                 meta = results['metadatas'][0][i] if results['metadatas'] else {}
                 source = meta.get('source', 'unknown') if meta else 'unknown'
                 
+                # Get distance (lower is better for cosine distance in Chroma usually)
+                distance = results['distances'][0][i] if results.get('distances') else 0.0
+                
+                # Convert to similarity score (approximate)
+                similarity = 1.0 - distance
+                
                 search_results.append(SearchResult(
                     content=doc,
-                    score=0.0,
+                    score=similarity, 
                     source=source
                 ))
             
@@ -145,9 +154,9 @@ class VectorStore:
             trace_details = f"Query: '{query}'\nTop k: {k}\n\n"
             for idx, res in enumerate(search_results):
                 preview = res.content[:200].replace('\n', ' ') + "..."
-                trace_details += f"[{idx+1}] Source: {res.source} | Content: {preview}\n"
+                trace_details += f"[{idx+1}] Score: {res.score:.4f} (Dist: {1-res.score:.4f}) | Source: {res.source}\n    Content: {preview}\n"
             
-            print_trace("VECTOR RETRIEVAL RESULTS (Context Found)", trace_details)
+            print_trace("VECTOR RETRIEVAL SCORING", trace_details)
         
         # Step 2: Keyword Matching Fallback
         # If query contains specific words, also do keyword search
