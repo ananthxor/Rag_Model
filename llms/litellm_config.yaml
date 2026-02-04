@@ -1,0 +1,21 @@
+model_list:
+  - model_name: "llama-3.2-1b"
+    litellm_params:
+      model: "ollama/llama3.2:1b"
+      api_base: "http://localhost:11434"
+      input_cost_per_token: 0.000001
+      output_cost_per_token: 0.000002
+      drop_params: true  # Drop unsupported params for Ollama
+  - model_name: "nomic-embed-text"
+    litellm_params:
+      model: "ollama/nomic-embed-text"
+      api_base: "http://localhost:11434"
+      input_cost_per_token: 0.0000001
+      output_cost_per_token: 0.0000001
+      drop_params: true  # Drop unsupported params for Ollama
+
+# Global settings
+litellm_settings:
+  drop_params: true  # Automatically drop unsupported parameters
+  success_callback: []
+  failure_callback: []

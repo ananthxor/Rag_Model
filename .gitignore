@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Project Logs and Data
+*.log
+rag_app.log
+uploads/
+storage/
+chroma_db/
+rag_db/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+cmd.txt
+overview.txt
+*_fix.python
+*_test.py
+debug_*.py
+temp/
+tmp/
+output/

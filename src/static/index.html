@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local RAG Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Upload Area -->
+        <aside class="sidebar">
+            <div class="brand">
+                <i data-lucide="brain-circuit"></i>
+                <h2>Local RAG</h2>
+            </div>
+
+            <div class="upload-section">
+                <h3>Knowledge Base</h3>
+                <div class="drop-zone" id="dropZone">
+                    <i data-lucide="upload-cloud"></i>
+                    <p>Drag & Drop files</p>
+                    <span class="sub-text">or click to browse (.pdf, .txt)</span>
+                    <input type="file" id="fileInput" hidden accept=".pdf,.txt">
+                </div>
+                <div class="upload-status" id="uploadStatus"></div>
+
+                <!-- Document List -->
+                <div class="doc-list-container">
+                    <h4>Documents</h4>
+                    <ul id="docList" class="doc-list"></ul>
+                    <button id="clearAllBtn" class="clear-all-btn" style="display: none;">
+                        <i data-lucide="trash-2"></i>
+                        <span>Clear All Documents</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <div class="info-item">
+                    <i data-lucide="database"></i>
+                    <span>ChromaDB Active</span>
+                </div>
+                <div class="info-item">
+                    <i data-lucide="cpu"></i>
+                    <!-- Model Dropdown -->
+                    <select id="modelSelect" class="model-select">
+                        <option value="llama3.2:1b">Llama 3.2 1B</option>
+                    </select>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-interface">
+            <div class="chat-header">
+                <h1>Assistant</h1>
+                <div class="status-indicator online">
+                    <span class="dot"></span> Online
+                </div>
+            </div>
+
+            <div class="chat-history" id="chatHistory">
+                <!-- Messages will appear here -->
+                <div class="message system">
+                    <div class="avatar"><i data-lucide="bot"></i></div>
+                    <div class="content">
+                        <p>Hello! I'm your local assistant. Upload some documents to the sidebar, and I'll answer
+                            questions based <strong>only</strong> on that data.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <div class="input-wrapper">
+                    <input type="text" id="userQuery" placeholder="Ask a question about your documents..."
+                        autocomplete="off">
+                    <button id="sendBtn" disabled>
+                        <i data-lucide="send"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
