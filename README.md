@@ -10,18 +10,24 @@ The system operates in two main phases: **Ingestion** (Learning) and **Inference
 
 ### 1. Ingestion Pipeline
 1.  **Document Loading**: PDF processing using `PyMuPDF` (Fitz).
-2.  **Chunking**: Splitting text into manageable chunks (default: 300 words).
+2.  **Advanced Chunking** (New):
+    *   **Recursive**: Intelligent splitting on paragraphs/sentences.
+    *   **Sentence-based**: Linguistically aware splitting using spaCy.
+    *   **Configurable Overlap**: Preserves context across chunks.
 3.  **Embedding**: Converting text to vectors using `nomic-embed-text` via Ollama.
-4.  **Storage**: Indexing vectors and metadata in **ChromaDB**.
+4.  **Storage**: Indexing vectors in **ChromaDB** and keywords in **BM25 Index**.
 
 ### 2. Inference Pipeline (RAG)
 1.  **Query Embedding**: Converting user question to vector.
-2.  **Retrieval**: Performing Cosine Similarity search in ChromaDB to find top-k relevant context.
-3.  **Reranking/Processing**: Constructing an augmented prompt with retrieved context.
+2.  **Hybrid Retrieval** (New):
+    *   **Semantic Search**: Vector similarity (Cosine/L2).
+    *   **Keyword Search**: BM25 algorithm for exact term matching.
+    *   **Fusion**: Weighted combination of scores (e.g., 70% Semantic + 30% Keyword).
+3.  **Processing**: Constructing an augmented prompt with retrieved context.
 4.  **Generation**: Generates response using `llama3.2:1b` (or configured model) via **LiteLLM**.
 
 ### 3. Observability & Routing
-*   **Langfuse**: Full-stack tracing of queries, retrievals, and generations.
+*   **Langfuse**: Full-stack tracing of queries, retrievals, scores, and generations.
 *   **LiteLLM**: Unified interface for LLM calls, handling routing and fallback.
 
 ---
@@ -30,6 +36,7 @@ The system operates in two main phases: **Ingestion** (Learning) and **Inference
 
 *   **Logic Core**: Python 3.10+, LangChain, LiteLLM
 *   **Vector Database**: ChromaDB
+*   **Retrieval Engine**: Hybrid (Vector + BM25)
 *   **LLM Runtime**: Ollama (Llama 3.2, Nomic Embed)
 *   **API**: FastAPI, Uvicorn
 *   **Frontend**: 
@@ -48,6 +55,10 @@ The system operates in two main phases: **Ingestion** (Learning) and **Inference
     ollama pull nomic-embed-text
     ```
 3.  **Python**: Ensure Python 3.10 or higher is installed.
+4.  **Text Processing**:
+    ```bash
+    python -m spacy download en_core_web_sm
+    ```
 
 ---
 
@@ -65,14 +76,24 @@ The system operates in two main phases: **Ingestion** (Learning) and **Inference
     ```
 
 3.  **Configuration**
-    *   Create a `.env` file (copy from example if available, or set up fresh).
-    *   **Langfuse (Optional but Recommended)**:
-        ```env
-        LANGFUSE_SECRET_KEY=sk-lf-...
-        LANGFUSE_PUBLIC_KEY=pk-lf-...
-        LANGFUSE_HOST=https://cloud.langfuse.com
-        LANGFUSE_ENABLED=true
-        ```
+    *   Create a `.env` file with new settings:
+    ```env
+    # RAG Settings
+    CHUNK_SIZE=500
+    CHUNK_OVERLAP=100
+    CHUNK_STRATEGY=recursive    # recursive, sentence
+    
+    # Hybrid Search
+    HYBRID_SEARCH_ENABLED=true
+    HYBRID_SEMANTIC_WEIGHT=0.7
+    HYBRID_BM25_WEIGHT=0.3
+
+    # Langfuse (Optional)
+    LANGFUSE_SECRET_KEY=sk-lf-...
+    LANGFUSE_PUBLIC_KEY=pk-lf-...
+    LANGFUSE_HOST=https://cloud.langfuse.com
+    LANGFUSE_ENABLED=true
+    ```
 
 ---
 
@@ -103,21 +124,13 @@ python main.py ingest "docs/manual.pdf"
 python main.py ask "How do I reset the device?"
 ```
 
-### 4. Mobile App (Flutter)
-Native Android/iOS experience:
-```bash
-cd flutter_client
-# ... setup flutter project ...
-flutter run
-```
-*(Requires FastAPI server running on tailored IP/localhost)*
-
 ---
 
 ## 🔍 Features
 
 *   **Privacy First**: Runs entirely locally (unless using cloud observability).
-*   **Multi-Modal Ready**: Architecture supports expanding to vision models.
+*   **Hybrid Search**: Combines vector semantic search with BM25 keyword matching for superior accuracy.
+*   **Advanced Chunking**: Uses linguistic analysis (spaCy) to split text without breaking sentences.
 *   **Production Grade**: 
     *   **Tracing**: Debug complex queries with Langfuse.
     *   **Async**: Non-blocking ingestion and inference.
@@ -126,7 +139,11 @@ flutter run
 ## 📂 Project Structure
 
 *   `src/`: Core source code.
-    *   `services/`: Business logic (LLM, Vector Store, Ingestion).
+    *   `services/`: Business logic.
+        *   `chunking_service.py`: Intelligent text splitting.
+        *   `hybrid_search.py`: BM25 + Vector retrieval.
+        *   `vector_store.py`: ChromaDB integration.
+        *   `llm_service.py`: LiteLLM wrapper.
     *   `core/`: Type definitions and configurations.
     *   `server.py`: FastAPI application.
 *   `flutter_client/`: Native mobile application code.
